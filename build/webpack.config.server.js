@@ -1,6 +1,8 @@
 const path = require('path')
+const webpackMerge = require('webpack-merge')
+const baseConfig = require('./webpack.base.js')
 
-module.exports = {
+module.exports = webpackMerge(baseConfig, {
   target: 'node',
   entry: {
     app: path.join(__dirname, '../client/server-entry.js')
@@ -11,28 +13,5 @@ module.exports = {
     publicPath: '',
     libraryTarget: 'commonjs2'
   },
-  mode: 'development',
-  module: {
-    rules: [
-      {
-        enforce: 'pre',
-        test: /.(js|jsx)$/,
-        loader: 'eslint-loader',
-        exclude: [
-          path.resolve(__dirname, '../node_modules')
-        ]
-      },
-      {
-        test: /.jsx$/,
-        loader: 'babel-loader'
-      },
-      {
-        test: /.js$/,
-        loader: 'babel-loader',
-        exclude: [
-          path.join(__dirname, '../node_modules/')
-        ]
-      }
-    ]
-  }
-}
+  mode: 'development'
+})

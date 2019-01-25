@@ -1,10 +1,12 @@
 const path = require('path')
 const HTMLPlugin = require('html-webpack-plugin')
 const webpack = require('webpack')
+const webpackMerge = require('webpack-merge')
+const baseConfig = require('./webpack.base.js')
 
 const isDev = process.env.NODE_ENV === 'development'
 
-const config = {
+const config = webpackMerge(baseConfig, {
   entry: {
     app: path.join(__dirname, '../client/app.js')
   },
@@ -42,7 +44,7 @@ const config = {
       template: path.join(__dirname, '../client/template.html')
     })
   ]
-}
+})
 
 if (isDev) {
   // 热加载需要吧一部分js代码注入到页面代码中，这部分js代码就在'react-hot-loader/patch'里面
