@@ -1,14 +1,23 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
+import { BrowserRouter } from 'react-router-dom'
 import { AppContainer } from 'react-hot-loader'
-import App from './App.jsx' // eslint-disable-line
+import { Provider } from 'mobx-react'
+import App from './views/App.jsx' // eslint-disable-line
+import appState from './store/app-state'
+
 // ReactDOM.hydrate(<App />,document.getElementById('root'))
 
 const root = document.getElementById('root')
 const render = (Component) => {
-  ReactDOM.hydrate(
+  const renderMethon = module.hot ? ReactDOM.render : ReactDOM.hydrate
+  renderMethon(
     <AppContainer>
-      <Component />
+      <Provider appState={appState}>
+        <BrowserRouter>
+          <Component />
+        </BrowserRouter>
+      </Provider>
     </AppContainer>,
     root,
   )
@@ -17,8 +26,8 @@ const render = (Component) => {
 render(App)
 
 if (module.hot) {
-  module.hot.accept('./App.jsx', () => {
-    const nextApp = require('./App.jsx').default // eslint-disable-line
+  module.hot.accept('./views/App.jsx', () => {
+    const nextApp = require('./views/App.jsx').default // eslint-disable-line
     render(nextApp)
   })
 }
