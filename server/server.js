@@ -1,18 +1,50 @@
 const Koa = require('koa')
-const path = require('path')
-const util = require('util')
-
 const app = new Koa()
 const router = require('koa-router')()
+const session = require('koa-session')
+const koaJson = require('koa-json')
+const serve = require('koa-static')
+const path = require('path')
+const serverRender = require('./util/server-render')
+const fs = require('fs')
+const util = require('util')
+fs.readFile = util.promisify(fs.readFile)
+const mount = require('koa-mount')
+// const views = require('koa-views')
+// app.use(views('views', { extension: 'ejs' }))
 
+// config and set session
+app.keys = ['my cecret 10144132']
+const Config = {
+  key: 'sess',
+  maxAge: 86400000,
+  overwrite: true,
+  httpOnly: false,
+  signed: true,
+  rolling: false
+}
+app.use(session(Config, app))
+
+// set response to json
+app.use(koaJson())
+
+// deal with error
 app.use(async (ctx, next) => {
   try {
+    console.log(ctx.method, ctx.url)
     await next()
     return
   } catch (err) {
     console.error(err)
   }
 })
+
+router.get('/asd', (ctx) => {
+  ctx.body = 'dasdasd'
+})
+// router.use('/api/user', require('./util/login.js'))
+const apiProxy = require('./util/proxy.js')
+router.all(/^\/api\//, apiProxy)
 
 //  const ReactSSR = require('react-dom/server')
 //  let fs = require('fs')
@@ -30,47 +62,29 @@ app.use(async (ctx, next) => {
 //     ctx.body = template;
 // })
 
-const axios = require('axios')
-const webpack = require('webpack')
-const MemFs = require('memory-fs')
-const ReactDomServer = require('react-dom/server')
-const serverConfig = require('../build/webpack.config.server')
-const mfs = new MemFs()
-mfs.readFile = util.promisify(mfs.readFile)
-const serverCompiler = webpack(serverConfig)
+// const proxy = require('koa-server-http-proxy')
+// app.use(proxy('/public', {
+//   target: 'http://localhost:8888',
+//   changeOrigin: true
+// }))
 
-serverCompiler.outputFileSystem = mfs
-const getTemplate = async () => {
-  const data = await axios.get('http://localhost:8888/public/index.html')
-  return data
+const isDev = process.env.NODE_ENV === 'development'
+const productionFun = async () => {
+  const serverEntry = require('../dist/server-entry')
+  const template = await fs.readFile(path.join(__dirname, '../dist/server.ejs'), 'utf-8')
+  router.get('*', async (ctx) => {
+    await serverRender(serverEntry, template, ctx)
+  })
 }
-let serverBundle
-serverCompiler.watch({}, async (err, stats) => {
-  if (err) throw err
-  stats = stats.toJson()
-  stats.errors.forEach(err => console.error(err))
-  stats.warnings.forEach(warn => console.warn(warn))
-
-  const bundlepath = path.join(serverConfig.output.path, serverConfig.output.filename)
-  const bundle = await mfs.readFile(bundlepath, 'utf-8')
-  const m = new module.constructor()
-  m._compile(bundle, 'server-entry.js')
-  serverBundle = m.exports.default
-})
-router.get('/dev', async ctx => {
-  let template = await getTemplate()
-  const content = ReactDomServer.renderToString(serverBundle)
-  ctx.body = template.data.replace('<!-- App -->', content)
-})
+if (!isDev) {
+  app.use(mount('/public', serve('./dist')))
+  productionFun()
+} else {
+  const devStatic = require('./util/dev-static')
+  router.use('*', devStatic)
+}
 
 app.use(router.routes())
-
-// app.use(ctx=>ctx.respond = false)
-const proxy = require('koa-server-http-proxy')
-app.use(proxy('/public', {
-  target: 'http://localhost:8888',
-  changeOrigin: true
-}))
 
 app.listen(8080, () => {
   console.log(`server is running on 127.0.0.1:8080`)
