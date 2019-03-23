@@ -17,6 +17,9 @@ const config = webpackMerge(baseConfig, {
   },
   mode: 'development',
   plugins: [
+    new webpack.DefinePlugin({
+      'process.env.API_BASE': '"http://127.0.0.1:8080"'
+    }),
     new HTMLPlugin({
       template: path.join(__dirname, '../client/template.html')
     }),
@@ -29,6 +32,7 @@ const config = webpackMerge(baseConfig, {
 
 if (isDev) {
   // 热加载需要吧一部分js代码注入到页面代码中，这部分js代码就在'react-hot-loader/patch'里面
+  config.devtool = '#cheap-module-eval-source-map'
   config.entry = {
     app: [
       'react-hot-loader/patch',
@@ -38,7 +42,7 @@ if (isDev) {
   config.devServer = {// 将打包编译的东西放在内存中而不是直接放在硬盘
     host: '0.0.0.0',
     port: '8888',
-    contentBase: path.join(__dirname, '../dist'), // 基础路径
+    // contentBase: path.join(__dirname, '../dist'), // 基础路径
     publicPath: '/public/',
     hot: true, // 热加载
     historyApiFallback: {

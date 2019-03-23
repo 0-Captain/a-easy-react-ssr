@@ -39,8 +39,6 @@ serverCompiler.watch({}, async (err, stats) => {
   const bundlepath = path.join(serverConfig.output.path, serverConfig.output.filename)
   const bundle = await mfs.readFile(bundlepath, 'utf-8')
   /* this bundle's type is string,not javascript code.So wo through module.constructor() let the string change to javascript code */
-  // const m = new module.constructor()
-  // m._compile(bundle, 'server-entry.js')
   const m = getModuleFromString(bundle, 'server-entry.js')
   serverBundle = m.exports
 })

@@ -15,7 +15,7 @@ module.exports = async (ctx) => {
   }
 
   let path = ctx.path
-  path = path.split('/', 7).slice(2).join('')
+  path = path.split('/', 7).slice(2).join('/')
 
   const query = Object.assign({}, ctx.query, {
     accesstoken: (needAccessToken && ctx.method === 'GET') ? user.accessToken : ''

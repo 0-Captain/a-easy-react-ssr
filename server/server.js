@@ -10,6 +10,7 @@ const fs = require('fs')
 const util = require('util')
 fs.readFile = util.promisify(fs.readFile)
 const mount = require('koa-mount')
+const cors = require('koa2-cors')
 // const views = require('koa-views')
 // app.use(views('views', { extension: 'ejs' }))
 
@@ -24,6 +25,16 @@ const Config = {
   rolling: false
 }
 app.use(session(Config, app))
+
+// 跨域
+app.use(cors({
+  origin: '*',
+  exposeHeaders: ['WWW-Authenticate', 'Server-Authorization'],
+  maxAge: '1728000',
+  credentials: true,
+  allowMethods: ['GET', 'POST', 'DELETE', 'PUT'],
+  allowHeaders: ['Content-Type', 'Authorization', 'Accept']
+}))
 
 // set response to json
 app.use(koaJson())
@@ -62,12 +73,6 @@ router.all(/^\/api\//, apiProxy)
 //     ctx.body = template;
 // })
 
-// const proxy = require('koa-server-http-proxy')
-// app.use(proxy('/public', {
-//   target: 'http://localhost:8888',
-//   changeOrigin: true
-// }))
-
 const isDev = process.env.NODE_ENV === 'development'
 const productionFun = async () => {
   const serverEntry = require('../dist/server-entry')
@@ -76,12 +81,18 @@ const productionFun = async () => {
     await serverRender(serverEntry, template, ctx)
   })
 }
+
 if (!isDev) {
   app.use(mount('/public', serve('./dist')))
   productionFun()
 } else {
   const devStatic = require('./util/dev-static')
   router.use('*', devStatic)
+  const proxy = require('koa-server-http-proxy')
+  app.use(proxy('/public', {
+    target: 'http://localhost:8888',
+    changeOrigin: true
+  }))
 }
 
 app.use(router.routes())
