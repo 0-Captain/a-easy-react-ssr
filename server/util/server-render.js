@@ -2,8 +2,8 @@ const asyncBootstrap = require('react-async-bootstrapper')
 const ejs = require('ejs')
 const ReactDomServer = require('react-dom/server')
 const Helmet = require('react-helmet').default
-const { createMuiTheme } = require('@material-ui/core/styles')
-const { lightBlue, pink } = require('@material-ui/core/colors')
+const { createMuiTheme, createGenerateClassName } = require('@material-ui/core/styles')
+const { lightBlue, pink, grey, lime } = require('@material-ui/core/colors')
 const { SheetsRegistry } = require('jss')
 
 const getStroeState = (stores) => (
@@ -23,17 +23,29 @@ module.exports = async (bundle, template, ctx) => {
   const theme = createMuiTheme({
     palette: {
       primary: lightBlue,
-      secondary: pink,
-      typography: {
-        fontFamily: 'Arial'
+      secondary: {
+        main: pink[300],
+        light: pink[100],
+        dark: pink[900]
+      },
+      accent: {
+        main: grey[300],
+        dark: grey[800],
+        light: grey[200]
+      },
+      error: {
+        main: lime[500],
+        dark: lime[800],
+        light: lime[200]
       }
     },
     typography: {
       useNextVariants: true
     }
   })
+  const generateClassName = createGenerateClassName()
 
-  const app = createApp(stores, routerContext, ctx.url, theme, sheetsRegistry)
+  const app = createApp(stores, routerContext, ctx.url, theme, sheetsRegistry, generateClassName)
   await asyncBootstrap(app)
   const content = ReactDomServer.renderToString(app)
 

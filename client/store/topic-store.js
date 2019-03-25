@@ -1,6 +1,7 @@
 import {
   observable,
   // extendObservable,
+  toJS,
   action,
   runInAction,
   configure,
@@ -84,8 +85,9 @@ export default class TopicStore {
 
   toJson() {
     return {
-      topics: this.topics,
+      topics: toJS(this.topics),
       syncing: this.syncing,
+      topicDetail: toJS(this.topicDetail),
     }
   }
 }

@@ -4,7 +4,7 @@ const router = require('koa-router')()
 const axios = require('axios')
 const webpack = require('webpack')
 const MemFs = require('memory-fs')
-const serverConfig = require('../../build/webpack.config.server')
+const serverConfig = require('../../build/webpack.config.server')()
 const mfs = new MemFs()
 mfs.readFile = util.promisify(mfs.readFile)
 
